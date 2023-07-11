@@ -1,4 +1,101 @@
-﻿# Игра начинается здесь:
+﻿#----------------------------------Код для выделения говорящего персонажа на экране-----------------------------------#
+init python:
+    # автоматическое объявление спрайтов
+    config.automatic_images_minimum_components = 1
+    config.automatic_images = [" ", "_", "/"]
+    config.automatic_images_strip = ["images"]
+
+
+init:
+    $ char_brightness = .1      # яркость выделенного персонажа
+    $ char_zoom = 1.025         # масштаб выделенного персонажа
+    $ char_t = .25              # время на выделение персонажа
+
+    # Позиция спрайта на экране
+    transform xpos(x=.5):
+        anchor(.5, 1.)
+        pos(x, 1.)
+
+    # Плавно отключаем выделение персонажа
+    transform mark_off(t=char_t):
+        ease_quad t matrixcolor BrightnessMatrix(0) zoom 1
+
+    # Плавно включаем выделение персонажа
+    transform mark(t=char_t, z=char_zoom):
+        parallel:
+            matrixcolor BrightnessMatrix(0)
+            # для вспышки
+            ease_quad t*.25 matrixcolor BrightnessMatrix(char_brightness * 2)
+            # для постоянного выделения
+            ease_quad t*.75 matrixcolor BrightnessMatrix(char_brightness)
+        parallel:
+            # увеличение - выдвигаемся на передний план
+            ease_quad t zoom z
+
+
+init python:    
+    from functools import partial
+
+    speaking_char = None    # последний говоривший
+
+    # Найти на экране картинку, которая начинается с заданного тега
+    # (чтобы выделение не учитывало эмоции и прочие дополнительные теги)
+    def img_by_tag(tag):
+        if tag:
+            imgs = renpy.get_showing_tags()
+            for imgTag in imgs:
+                if str(imgTag).startswith(tag):
+                    return str(imgTag)
+        # если на экране нет говорящего персонажа, то и не показываем его
+        return None
+
+    # Показать того же персонажа, если он уже есть на экране
+    def char_show(char, at_list=[]):
+        i = img_by_tag(char)
+        if i:
+            renpy.show(i, at_list=at_list)
+
+    # Снять выделение
+    def char_off(t=None):
+        # если нужно ждать, то берем установленную в настройках паузу
+        if t == True:
+            t = char_t
+
+        # снимаем выделение
+        char_show(img_by_tag(store.speaking_char), at_list=[mark_off()])
+        store.speaking_char = None
+
+        # пауза, если нужна, чтобы персонаж успел снять выделение
+        if t:
+            renpy.pause(t)
+
+    # Выделение говорящего персонажа
+    def char_blink(char, event_name, *args, **kwarg):
+        # Проверка на наличие нового говорящего персонажа
+        if event_name == "begin" and char != store.speaking_char:
+            char_off()                          # Снимаем выделениео со старого говорящего
+            store.speaking_char = char          # Запоминаем нового говорящего
+            char_show(char, at_list=[mark()])   # Ставим выделение на нового говорящего
+
+    # функция с параметрами в качестве одного параметра
+    def c_b(*args, **kwarg):
+        # partial() возвращает partial-объект (по сути, функцию),
+        # который при вызове вызывается как функция func
+        return partial(char_blink, *args, **kwarg)
+
+    # Метод замены обычного Character на новый, где вторым параметром идёт спрайт
+    # Использовать его за место стандартного конструктора Character для создания персонажей
+    def CH(name=None, sprite=None, *args, **kwarg):
+        return Character(name, callback=c_b(sprite), *args, **kwarg)
+
+
+    # Инициализация персонажей с подсветкой вполняется строго в блоке init python
+    player = CH("Петруха", color="#18aace")
+
+    #---------------------------------------------------------------------------------------------------------------------#
+
+
+# Игра начинается здесь:
 label start:
     scene start_image with fade
     player """
