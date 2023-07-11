@@ -100,7 +100,6 @@ label bedroom_label(obj=""):
     # Ветки слов ГГ при описании кликабельных объектов без дальнейшей логики
     elif obj == "sofa":
         player "Жёсткий диван, от которого у меня всё болит."
-        $ hide_all_screens()
     elif obj == "poster":
         player "Забавный плакат. Какие крутые банки у девушки!"
     elif obj == "computer":

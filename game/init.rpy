@@ -1,9 +1,3 @@
-init python:
-    def hide_all_screens():
-        for screen in renpy.current_screen():
-            renpy.hide_screen(screen)
-
-
 init:
     # Выключение возможности прокрутки назад
     # В этой игре прокрутка назад не изменяет значение переменных в прошлое значение
