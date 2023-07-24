@@ -93,3 +93,80 @@ screen show_leter(name):
     imagebutton:
         idle "images/letters/" + name + ".png"
         action Return(True), Hide(renpy.current_screen().name, dissolve)
+
+
+# Дневник игрока
+screen journal():
+    ## Этот тег гарантирует, что любой другой экран с тем же тегом будет
+    ## заменять этот.
+    tag menu
+
+    add Solid("#1b1a19")             # Вывод подложки для фона
+    add "images/letters/journal.png"    # Вывод фона для журнала
+    hbox:
+        xsize 1820 ysize 920
+        xpos 100 ypos 50
+
+        # Левая колонка
+        vbox:
+            text "Глосарий"
+            viewport id "vpLeft":
+                xsize 330
+                xpos 30 ypos 30
+                draggable True  # Возможность прокрутки через перетягивание мышкой
+                mousewheel True # Возможность прокрутки скроллом колёсика мыши
+                
+                # Вертикальный список имён персонажей
+                vbox:
+                    spacing 30  # Установка интервала между элементами контейнера
+                    
+                    # Вывод названий персонажей из словаря через цикл
+                    for key, value in journal.items():
+                        $ person = value.get("Name")        # Локальная переменная экрана
+                        if key != selectEntry:
+                            textbutton "{color=#000}%s{/color}" % person:
+                                action SetVariable("selectEntry", key), Function(adj.change, 0)
+                        else:
+                            textbutton "{u}{color=#b81111}%s{/color}{/u}" % person:
+                                action SetVariable("selectEntry", None)
+
+        # Ползунок для прокрутки для левой колонки
+        vbar:
+            xpos -20 ypos 40
+            value YScrollValue("vpLeft")
+        
+        # Правая колонка
+        viewport id "vpRight":
+            xsize 1200 ysize 850
+            xpos 20 ypos 80
+            draggable True
+            mousewheel True
+            yadjustment adj
+            
+            hbox:
+                spacing 80
+                
+                # Проверка выделенной записи персонажа для вывода картинки
+                if selectEntry:
+                    add "images/journal/%s.jpg" % selectEntry:
+                        xsize 450 ysize 700
+                    
+                # Вертикальный блок с описанием персонажа
+                vbox:
+                    for key, value in journal.items():
+                        if key == selectEntry:
+                            text "%s" % value.get("Name"):
+                                size 42
+                            null height 50
+                            text "%s" % value.get("Discript")
+
+        # Ползунок для прокрутки для правой колонки
+        vbar:
+            ysize 900
+            xpos -10 ypos 50
+            value YScrollValue("vpRight")
+
+    imagebutton:
+        xpos 1820 ypos 20
+        idle "images/letters/button.png"
+        action SetVariable("selectEntry", None), Return() mouse "put"
