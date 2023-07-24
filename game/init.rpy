@@ -26,9 +26,6 @@ init:
     
     $ musicTrack = 0
 
-    # Инициализация персонажей
-    define player = Character('Петруха', color="#c8ffc8")
-
     # Инициализация изображений и фонов
     image page_1 = "images/letters/page1.png"
     image black = "#000"
